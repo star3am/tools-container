@@ -207,7 +207,6 @@ RUN apt autoremove --purge -y && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --chown=ubuntu ./ /app
-RUN rm -rf /app/.git*
 #RUN rm -rf /app/*
 
 USER ubuntu
