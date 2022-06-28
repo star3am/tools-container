@@ -108,7 +108,7 @@ ARG TFLINT_AZURERM_PLUGIN="0.12.0"
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=arm64; else ARCHITECTURE=amd64; fi && \
     mkdir -p /home/ubuntu/.tflint.d/plugins && \
     chown -R ubuntu:ubuntu /home/ubuntu/.tflint.d && \
-    curl -Lo /tmp/tflint-ruleset-azurerm_linux_${ARCHITECTURE}.zip https://github.com/terraform-linters/tflint-ruleset-azurerm/releases/download/v${TFLINT_AZURERM_PLUGIN}/tflint-ruleset-azurerm_linux_${ARCHITECTURE}.zip && \                                                         
+    curl -Lo /tmp/tflint-ruleset-azurerm_linux_${ARCHITECTURE}.zip https://github.com/terraform-linters/tflint-ruleset-azurerm/releases/download/v${TFLINT_AZURERM_PLUGIN}/tflint-ruleset-azurerm_linux_${ARCHITECTURE}.zip && \
     unzip /tmp/tflint-ruleset-azurerm_linux_${ARCHITECTURE}.zip -d /home/ubuntu/.tflint.d/plugins
 
 # terraform-docs
@@ -206,8 +206,12 @@ RUN apt autoremove --purge -y && \
     find /opt /usr/lib -name __pycache__ -print0 | xargs --null rm -rf && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --chown=ubuntu ./ /app
-#RUN rm -rf /app/*
+# COPY --chown=ubuntu ./ /app
+# RUN rm -rf /app/*
 
 USER ubuntu
+
+# pre-commit https://pre-commit.com/#install
+RUN python3 -m pip install --quiet --upgrade pre-commit
+
 WORKDIR /app

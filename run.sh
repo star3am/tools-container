@@ -7,13 +7,19 @@
 
 pwd
 docker images | grep tools
-docker buildx create --name tools --use
+docker rmi -f tools
+docker buildx create --name tools --use --node tools0
 docker buildx inspect
 # https://vikaspogu.dev/posts/docker-buildx-setup/
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 docker buildx build --platform=linux/amd64,linux/arm64 -t tools:latest .
 docker buildx imagetools inspect star3am/repository:tools
+docker build -t tools .
+docker images | grep tools
 docker compose run --rm tools bash -c '
+  cd /app
+  pwd
+  tree -a -L 1
   python -V
   pip -V
   cookiecutter --version
@@ -24,6 +30,7 @@ docker compose run --rm tools bash -c '
   kubectl version
   terraform -version
   terragrunt -version
-  pwd
+  ~/.local/bin/pre-commit --version
+  ~/.local/bin/pre-commit validate-config
+  ~/.local/bin/pre-commit run --all-files
 '
-

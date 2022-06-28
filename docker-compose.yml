@@ -10,10 +10,10 @@ services:
     # If you have build and pushed this container to a registry you can use it below and disable build above
     image: tools:latest
     network_mode: "bridge"
-    # Does not work in Gitlab, so we use COPY in Dockerfile
-    # volumes:
-    #   - ".:/app"
-    #   - "$AZURE_CONFIG_DIR:/home/ubuntu/.azure"
+    volumes:
+      - ".:/app"
+      - "~/.ssh:/home/ubuntu/.ssh"
+      # - "$AZURE_CONFIG_DIR:/home/ubuntu/.azure"
     working_dir: "/app"
     environment:
       - ARM_CLIENT_ID
