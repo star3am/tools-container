@@ -8,11 +8,12 @@
 pwd
 docker images | grep tools
 docker rmi -f tools
-docker buildx create --name tools --use --node tools0
+docker buildx rm
+docker buildx create --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 --name tools --use --node tools0
 docker buildx inspect
 # https://vikaspogu.dev/posts/docker-buildx-setup/
 docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-docker buildx build --platform=linux/amd64,linux/arm64 -t tools:latest .
+docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 --progress=plain -t tools:latest .
 docker buildx imagetools inspect star3am/repository:tools
 docker build -t tools .
 docker images | grep tools
