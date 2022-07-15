@@ -1,16 +1,17 @@
 ARG DOTNET_VERSION="3.1.413"
 ARG UBUNTU_RELEASE="focal"
-#FROM mcr.microsoft.com/dotnet/core/sdk:${DOTNET_VERSION}-${UBUNTU_RELEASE}
-FROM ubuntu:focal
 
-# Ubuntu
+FROM ubuntu:${UBUNTU_RELEASE}
+
+
 ARG DEBIAN_FRONTEND=noninteractive
-#ARG MIRROR="http://azure.archive.ubuntu.com"
 ARG MIRROR="http://archive.ubuntu.com"
+
 # UBUNTU_RELEASE must be redeclared because it is used before "FROM"
 # https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
 ARG UBUNTU_RELEASE="focal"
 ARG UBUNTU_VERSION="20.04"
+ARG TARGETPLATFORM
 ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree"
 
 # Env vars
@@ -29,16 +30,6 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1 --
 
 # packages.microsoft.com repo key
 RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
-
-# Azure CLI
-# PEM file removal is to stop Aquasec from complaining about sensitive data in the resulting image
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64/v8" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=arm64; else ARCHITECTURE=amd64; fi && \
-    add-apt-repository "deb [arch=${ARCHITECTURE}] https://packages.microsoft.com/repos/azure-cli/ ${UBUNTU_RELEASE} main" && \
-    apt update && \
-    apt install --no-install-recommends -y azure-cli && \
-    find /opt /usr/lib -name __pycache__ -print0 | xargs --null rm -rf && \
-    find /opt/az/lib/python3.6/test/ -iname '*.pem' -ls -delete || true && \
-    rm -rf /var/lib/apt/lists/*
 
 # # Microsoft ODBC Driver for SQL Server on Linux
 # # https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver15#ubuntu17
@@ -121,24 +112,9 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=amd64; elif [ "$
     curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
-# terraform plugin-cache
-RUN mkdir -p /home/ubuntu/.terraform.d/plugin-cache && \
-    chown -R ubuntu:ubuntu /home/ubuntu/.terraform.d
-
-# cookie-cutter https://github.com/cookiecutter/cookiecutter/blob/master/docs/installation.rst
-RUN python3 -m pip install --quiet --upgrade cookiecutter
-
-# # dbt https://github.com/dbt-labs/dbt-core/blob/main/docker/Dockerfile
-# ARG dbt_core_ref=dbt-core@v1.2.0a1
-# ARG dbt_postgres_ref=dbt-core@v1.2.0a1
-# ARG dbt_redshift_ref=dbt-redshift@v1.0.0
-# ARG dbt_bigquery_ref=dbt-bigquery@v1.0.0
-# ARG dbt_snowflake_ref=dbt-snowflake@v1.0.0
-# ARG dbt_third_party
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
+# # terraform plugin-cache
+# RUN mkdir -p /home/ubuntu/.terraform.d/plugin-cache && \
+#     chown -R ubuntu:ubuntu /home/ubuntu/.terraform.d
 
 # aws cli https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 # https://aws.amazon.com/blogs/developer/aws-cli-v2-now-available-for-linux-arm/
@@ -161,28 +137,28 @@ RUN apt-get -qqy update && apt-get install -qqy \
         openssh-client \
         git \
         make \
-        gnupg
+        gnupg && \
     # TODO: Fixme: The repository 'https://packages.cloud.google.com/apt cloud-sdk-focal Release' does not have a Release file.
     # INFO: https://packages.cloud.google.com/apt/dists Ubuntu Focal Realease does not exist, we use Ubuntu Bionic instead
-    # export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
-    # export CLOUD_SDK_REPO="cloud-sdk-bionic" && \
-    # echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    # curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    # apt-get update && \
-    # apt-get install -y google-cloud-sdk=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-app-engine-python=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-app-engine-python-extras=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-app-engine-java=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-app-engine-go=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-datalab=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-datastore-emulator=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-pubsub-emulator=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-bigtable-emulator=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-firestore-emulator=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-spanner-emulator=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-cbt=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-kpt=${CLOUD_SDK_VERSION}-0 \
-    #     google-cloud-sdk-local-extract=${CLOUD_SDK_VERSION}-0
+    export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
+    export CLOUD_SDK_REPO="cloud-sdk-bionic" && \
+    echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+    apt-get update && \
+    apt-get install -y google-cloud-sdk=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-app-engine-python=${CLOUD_SDK_VERSION}-0 \
+        google-cloud-sdk-app-engine-python-extras=${CLOUD_SDK_VERSION}-0
+        # google-cloud-sdk-app-engine-java=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-app-engine-go=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-datalab=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-datastore-emulator=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-pubsub-emulator=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-bigtable-emulator=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-firestore-emulator=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-spanner-emulator=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-cbt=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-kpt=${CLOUD_SDK_VERSION}-0 \
+        # google-cloud-sdk-local-extract=${CLOUD_SDK_VERSION}-0
 
 # packer
 ARG PACKER_VERSION="1.7.2"
@@ -205,6 +181,26 @@ RUN apt autoremove --purge -y && \
 # RUN rm -rf /app/*
 
 USER ubuntu
+ENV PATH="$PATH:/home/ubuntu/.local/bin"
+
+# azure cli
+# BUG: https://github.com/Azure/azure-cli/issues/7368 so installing via pip
+RUN python3 -m pip install --quiet --upgrade azure-cli
+
+# cookie-cutter https://github.com/cookiecutter/cookiecutter/blob/master/docs/installation.rst
+RUN python3 -m pip install --quiet --upgrade cookiecutter
+
+# dbt https://github.com/dbt-labs/dbt-core/blob/main/docker/Dockerfile
+ARG dbt_core_ref=dbt-core@v1.2.0a1
+ARG dbt_postgres_ref=dbt-core@v1.2.0a1
+ARG dbt_redshift_ref=dbt-redshift@v1.0.0
+ARG dbt_bigquery_ref=dbt-bigquery@v1.0.0
+ARG dbt_snowflake_ref=dbt-snowflake@v1.0.0
+ARG dbt_third_party
+RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
+RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
+# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
+# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
 
 # pre-commit https://pre-commit.com/#install
 RUN python3 -m pip install --quiet --upgrade pre-commit

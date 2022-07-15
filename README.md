@@ -33,3 +33,7 @@ docker compose run --rm tools bash -c '
   terragrunt -version
   pwd'
 ```
+
+## Links
+- https://nielscautaerts.xyz/making-dockerfiles-architecture-independent.html
+- 
