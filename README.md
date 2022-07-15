@@ -1,6 +1,7 @@
 # Tools Container
 
-A MultiArch Container I use with popular tools, a list will be provided below.
+A Multi-Arch/Multi-OS Container I use with popular tools, a list will be provided below.
+
 
 ## Chipsets Supported
 | Name | Amd64 | Arm64
@@ -8,9 +9,9 @@ A MultiArch Container I use with popular tools, a list will be provided below.
 | Tools | ✓ | ✓ |
 
 ## Command Line CLI Supported
-| Name | Azure | Google | AWS | Kubectl | Dbt | MS SQL
-|------|-------|--------|-----|-------|-------|--------|
-| Tools | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Name | Azure | Google | AWS | Kubectl | Dbt | Terraform | Terragrunt | TFENV | Python | Pip | Packer | Cookiecutter | Pre-Commit |
+|------|-------|--------|-----|-------|-------|-----------|------------|-------|--------|-----|--------|--------------|------------|
+| Tools | ✓   |     | ✓   | ✓     | ✓     |         ✓            ✓ |    ✓ |     ✓ |  ✓ |     ✓      |      ✓ |         ✓ |
 
 ## Clouds Supported
 | Name | Azure | Google | AWS |
@@ -20,20 +21,9 @@ A MultiArch Container I use with popular tools, a list will be provided below.
 ## Usage
 
 ```shell
-docker compose run --rm tools bash -c '
-  python -V
-  pip -V
-  cookiecutter --version
-  aws --version
-  az --version
-  gcloud --version
-  dbt --version
-  kubectl version
-  terraform -version
-  terragrunt -version
-  pwd'
+./run.sh
 ```
 
 ## Links
 - https://nielscautaerts.xyz/making-dockerfiles-architecture-independent.html
-- 
+-
