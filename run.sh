@@ -51,6 +51,8 @@ ARCH=${ARCH} docker compose run --rm tools bash -c '
   dbt --version
   echo "*** kubectl version"
   kubectl version
+  echo "*** helm version"
+  helm version
   echo "*** terraform -version"
   terraform -version
   echo "*** terragrunt -version"

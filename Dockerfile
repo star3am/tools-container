@@ -12,7 +12,7 @@ ARG MIRROR="http://archive.ubuntu.com"
 ARG UBUNTU_RELEASE="focal"
 ARG UBUNTU_VERSION="20.04"
 ARG TARGETPLATFORM
-ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree"
+ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree gpg"
 
 # Env vars
 ENV PYTHONIOENCODING=utf-8
@@ -111,6 +111,13 @@ ARG KUBECTL_VERSION="1.18.10"
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm/v8" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=arm64; else ARCHITECTURE=amd64; fi && \
     curl -Lo /usr/local/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/${ARCHITECTURE}/kubectl && \
     chmod +x /usr/local/bin/kubectl
+
+# helm https://helm.sh/docs/intro/install/#from-apt-debianubuntu
+RUN curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null && \
+    apt-get install apt-transport-https --yes && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list && \
+    apt-get update && \
+    apt-get install -y helm
 
 # # terraform plugin-cache
 # RUN mkdir -p /home/ubuntu/.terraform.d/plugin-cache && \
