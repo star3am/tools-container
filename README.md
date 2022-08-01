@@ -12,7 +12,7 @@ A Multi-Arch/Multi-OS Container I use with popular tools, a list will be provide
 | Name | Azure | Google | AWS | Kubectl | Dbt | Terraform | Terragrunt | TFENV | Python | Pip | Packer | Cookiecutter | Pre-Commit |
 |------|-------|--------|-----|-------|-------|-----------|------------|-------|--------|-----|--------|--------------|------------|
 | Tools | ✓   | ✓ | | ✓   | ✓     | ✓     |         ✓            ✓ |    ✓ |     ✓ |  ✓ |     ✓      |      
-✓ |         ✓ |
+✓ |         ✓ ✓ |
 
 ## Clouds Supported
 | Name | Azure | Google | AWS |
