@@ -11,7 +11,8 @@ A Multi-Arch/Multi-OS Container I use with popular tools, a list will be provide
 ## Command Line CLI Supported
 | Name | Azure | Google | AWS | Kubectl | Dbt | Terraform | Terragrunt | TFENV | Python | Pip | Packer | Cookiecutter | Pre-Commit |
 |------|-------|--------|-----|-------|-------|-----------|------------|-------|--------|-----|--------|--------------|------------|
-| Tools | ✓   |     | ✓   | ✓     | ✓     |         ✓            ✓ |    ✓ |     ✓ |  ✓ |     ✓      |      ✓ |         ✓ |
+| Tools | ✓   | ✓ | | ✓   | ✓     | ✓     |         ✓            ✓ |    ✓ |     ✓ |  ✓ |     ✓      |      
+✓ |         ✓ |
 
 ## Clouds Supported
 | Name | Azure | Google | AWS |
