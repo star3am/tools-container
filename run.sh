@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Disabled
+
 # docker build -t tools .
 # docker tag tools:latest star3am/repository:tools
 # docker login
