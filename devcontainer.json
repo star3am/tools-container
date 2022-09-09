@@ -1,0 +1,11 @@
+{
+  "build": { "dockerfile": "Dockerfile" },
+  "//comment_image": "This devcontainer is built from a Dockerfile, if you want to use an image, see below",
+  "//image": "mcr.microsoft.com/vscode/devcontainers/typescript-node:0-12",
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["dbaeumer.vscode-eslint"]
+    }
+  }
+}
