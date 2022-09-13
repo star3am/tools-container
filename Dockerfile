@@ -49,15 +49,14 @@ RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 ARG USER_ID="1001"
 RUN adduser --disabled-password --gecos "" --shell /bin/bash --uid ${USER_ID} ubuntu
 
-# ARG TERRAFORM_VERSION="latest"
-# RUN echo ${TERRAFORM_VERSION} > /opt/.terraform-version 2>&1
-COPY --chown=ubuntu ./.terraform-version /opt/.terraform-version
-
-# ARG TERRAGRUNT_VERSION="latest"
-# RUN echo ${TERRAGRUNT_VERSION} > /opt/.terragrunt-version 2>&1
-COPY --chown=ubuntu ./.terragrunt-version /opt/.terragrunt-version
+# hadolint
+ARG HADOLINT_VERSION="v2.10.0"
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=x86_64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm/v8" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=arm64; else ARCHITECTURE=x86_64; fi && \
+    curl -Lo /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCHITECTURE} && \
+    chmod +x /usr/local/bin/hadolint
 
 # tfenv
+COPY --chown=ubuntu ./.terraform-version /opt/.terraform-version
 RUN git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv && \
     ln -s /opt/tfenv/bin/tfenv /usr/local/bin && \
     ln -s /opt/tfenv/bin/terraform /usr/local/bin && \
@@ -67,6 +66,7 @@ RUN git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv && \
     chown -R ubuntu:root /opt/tfenv
 
 # tgenv
+COPY --chown=ubuntu ./.terragrunt-version /opt/.terragrunt-version
 RUN git clone --depth 1 https://github.com/cunymatthieu/tgenv.git /opt/tgenv && \
     ln -s /opt/tgenv/bin/tgenv /usr/local/bin && \
     ln -s /opt/tgenv/bin/terragrunt /usr/local/bin && \
@@ -87,7 +87,7 @@ ARG TFLINT_VERSION="0.30.0"
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm/v8" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=arm64; else ARCHITECTURE=amd64; fi && \
     curl -Lo /tmp/tflint.zip https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_${ARCHITECTURE}.zip && \
     unzip /tmp/tflint.zip -d /usr/local/bin && \
-    python3 -m pip install --quiet yamllint
+    python3 -m pip install --no-cache-dir --quiet yamllint
 
 # tflint azurerm plugin
 ARG TFLINT_AZURERM_PLUGIN="0.12.0"
@@ -192,10 +192,10 @@ ENV PATH="$PATH:/home/ubuntu/.local/bin"
 
 # azure cli
 # BUG: https://github.com/Azure/azure-cli/issues/7368 so installing via pip
-RUN python3 -m pip install --quiet --upgrade azure-cli
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade azure-cli
 
 # cookie-cutter https://github.com/cookiecutter/cookiecutter/blob/master/docs/installation.rst
-RUN python3 -m pip install --quiet --upgrade cookiecutter
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade cookiecutter
 
 # dbt https://github.com/dbt-labs/dbt-core/blob/main/docker/Dockerfile
 ARG dbt_core_ref=dbt-core@v1.2.0a1
@@ -204,12 +204,12 @@ ARG dbt_redshift_ref=dbt-redshift@v1.0.0
 ARG dbt_bigquery_ref=dbt-bigquery@v1.0.0
 ARG dbt_snowflake_ref=dbt-snowflake@v1.0.0
 ARG dbt_third_party
-RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
-RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
+RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
+RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
+# RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
+# RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
 
 # pre-commit https://pre-commit.com/#install
-RUN python3 -m pip install --quiet --upgrade pre-commit
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade pre-commit
 
 WORKDIR /app
