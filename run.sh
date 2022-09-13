@@ -13,21 +13,22 @@ elif  [[ $arch == arm64 ]]; then
 fi
 echo "CPU is ${ARCH}"
 pwd
-docker images | grep tools
-docker rmi -f tools-${ARCH}
-docker buildx ls
-docker buildx rm
-docker buildx ls
-docker buildx create --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 --name tools --use --node tools0
-docker buildx use tools
-docker buildx inspect
-# https://vikaspogu.dev/posts/docker-buildx-setup/
-docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-docker buildx build --platform linux/${ARCH} -t tools-${ARCH} --progress=plain --load .
-#docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 --progress=plain -t tools:latest .
-docker images | grep tools
-docker buildx ls
-#docker buildx imagetools inspect star3am/repository:tools
+# docker images | grep tools
+# docker rmi -f tools-${ARCH}
+# docker buildx ls
+# docker buildx rm
+# docker buildx ls
+# docker buildx create --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 --name tools --use --node tools0
+# docker buildx use tools
+# docker buildx inspect
+# # https://vikaspogu.dev/posts/docker-buildx-setup/
+# docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+# docker buildx build --platform linux/${ARCH} -t tools-${ARCH} --progress=plain --load .
+# #docker buildx build --platform=linux/amd64,linux/arm64,linux/arm/v7,linux/arm64/v8 --progress=plain -t tools:latest .
+# docker images | grep tools
+# docker buildx ls
+# docker buildx imagetools inspect star3am/repository:tools
+docker rmi tools-container_tools
 ARCH=${ARCH} docker compose run --rm tools bash -c '
   cd /app
   env | grep PATH
@@ -35,6 +36,7 @@ ARCH=${ARCH} docker compose run --rm tools bash -c '
   uname -a
   pwd
   tree -a -L 1
+  cat Dockerfile
   echo "*** python -V"
   python -V
   echo "*** pip -V"
@@ -61,8 +63,9 @@ ARCH=${ARCH} docker compose run --rm tools bash -c '
   pre-commit --version
   echo "*** packer version"
   packer version
-  # pre-commit validate-config
-  # pre-commit run --all-files
-  # echo "*** pip list"
-  # pip list
+  DIR=~/.git-template
+  git config --global init.templateDir ${DIR}
+  pre-commit init-templatedir -t pre-commit ${DIR}
+  pre-commit validate-config
+  pre-commit run -a
 '
