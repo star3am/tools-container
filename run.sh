@@ -63,6 +63,10 @@ ARCH=${ARCH} docker compose run --rm tools bash -c '
   pre-commit --version
   echo "*** packer version"
   packer version
+  echo "*** docker version"
+  docker version
+  echo "*** docker-compose version"
+  docker-compose version
   DIR=~/.git-template
   git config --global init.templateDir ${DIR}
   pre-commit init-templatedir -t pre-commit ${DIR}
