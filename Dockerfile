@@ -3,7 +3,6 @@ ARG UBUNTU_RELEASE="focal"
 
 FROM ubuntu:${UBUNTU_RELEASE}
 
-
 ARG DEBIAN_FRONTEND=noninteractive
 ARG MIRROR="http://archive.ubuntu.com"
 
@@ -179,6 +178,12 @@ RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
     sh get-docker.sh && \
     usermod -aG docker ubuntu
 
+# docker-compose https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
+ARG DOCKERCOMPOSE_VERSION="2.11.2"
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=x86_64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=aarch64; elif [ "$TARGETPLATFORM" = "linux/arm/v8" ]; then ARCHITECTURE=aarch64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=aarch64; else ARCHITECTURE=x86_64; fi && \
+    curl -Lo /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/v${DOCKERCOMPOSE_VERSION}/docker-compose-linux-${ARCHITECTURE} && \
+    chmod +x /usr/local/bin/docker-compose
+
 # cleanup
 RUN apt autoremove --purge -y && \
     find /opt /usr/lib -name __pycache__ -print0 | xargs --null rm -rf && \
@@ -209,7 +214,13 @@ RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-la
 # RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
 # RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
 
+# BUG: Broken pip due to bad openssl pip module
+# https://www.reddit.com/r/saltstack/comments/vc7oyb/getting_cryptographydeprecationwarning_python_36/
+# https://bitcoden.com/answers/broken-pip-due-to-bad-openssl-module
+# RUN python3 -m pip install --no-cache-dir --quiet --upgrade cachecontrol
+# RUN python3 -m pip install --no-cache-dir --quiet --upgrade pyopenssl
+
 # pre-commit https://pre-commit.com/#install
-RUN python3 -m pip install --no-cache-dir --quiet --upgrade pre-commit
+# RUN python3 -m pip install --no-cache-dir --quiet --upgrade git+https://github.com/pre-commit/pre-commit.git@v2.18.1
 
 WORKDIR /app

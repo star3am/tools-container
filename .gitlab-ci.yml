@@ -7,6 +7,7 @@ stages:
 master:
   stage: master
   script:
+    # https://www.docker.com/blog/how-to-rapidly-build-multi-architecture-images-with-buildx/
     # - pwd
     # - docker build -t tools:latest .
     # - docker images | grep tools
@@ -16,6 +17,7 @@ master:
     # - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
     # - docker buildx build --platform=linux/amd64,linux/arm64 -t tools:latest .
     # - docker buildx imagetools inspect star3am/repository:tools
+    # - docker buildx build --push --platform linux/amd64,linux/arm64 --tag star3am/repository:tools .
     - |
       docker compose run --rm tools bash -c '
       cd /app
@@ -50,6 +52,10 @@ master:
       pre-commit --version
       echo "*** packer version"
       packer version
+      echo "*** docker version"
+      docker version
+      echo "*** docker-compose version"
+      docker-compose version
       # pre-commit validate-config
       # pre-commit run --all-files
       # echo "*** pip list"
