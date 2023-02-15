@@ -3,7 +3,6 @@ ARG UBUNTU_RELEASE="focal"
 
 FROM ubuntu:${UBUNTU_RELEASE}
 
-
 ARG DEBIAN_FRONTEND=noninteractive
 ARG MIRROR="http://archive.ubuntu.com"
 
@@ -12,7 +11,7 @@ ARG MIRROR="http://archive.ubuntu.com"
 ARG UBUNTU_RELEASE="focal"
 ARG UBUNTU_VERSION="20.04"
 ARG TARGETPLATFORM
-ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree gpg"
+ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree gpg snapd shellcheck"
 
 # Env vars
 ENV PYTHONIOENCODING=utf-8
@@ -49,15 +48,14 @@ RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
 ARG USER_ID="1001"
 RUN adduser --disabled-password --gecos "" --shell /bin/bash --uid ${USER_ID} ubuntu
 
-# ARG TERRAFORM_VERSION="latest"
-# RUN echo ${TERRAFORM_VERSION} > /opt/.terraform-version 2>&1
-COPY --chown=ubuntu ./.terraform-version /opt/.terraform-version
-
-# ARG TERRAGRUNT_VERSION="latest"
-# RUN echo ${TERRAGRUNT_VERSION} > /opt/.terragrunt-version 2>&1
-COPY --chown=ubuntu ./.terragrunt-version /opt/.terragrunt-version
+# hadolint
+ARG HADOLINT_VERSION="v2.10.0"
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=x86_64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm/v8" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=arm64; else ARCHITECTURE=x86_64; fi && \
+    curl -Lo /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-Linux-${ARCHITECTURE} && \
+    chmod +x /usr/local/bin/hadolint
 
 # tfenv
+COPY --chown=ubuntu ./.terraform-version /opt/.terraform-version
 RUN git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv && \
     ln -s /opt/tfenv/bin/tfenv /usr/local/bin && \
     ln -s /opt/tfenv/bin/terraform /usr/local/bin && \
@@ -67,12 +65,13 @@ RUN git clone --depth 1 https://github.com/tfutils/tfenv.git /opt/tfenv && \
     chown -R ubuntu:root /opt/tfenv
 
 # tgenv
+COPY --chown=ubuntu ./.terragrunt-version /opt/.terragrunt-version
 RUN git clone --depth 1 https://github.com/cunymatthieu/tgenv.git /opt/tgenv && \
     ln -s /opt/tgenv/bin/tgenv /usr/local/bin && \
     ln -s /opt/tgenv/bin/terragrunt /usr/local/bin && \
     mkdir -p /opt/tgenv/versions && \
     cd /opt/tgenv && \
-    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then TGENV_ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64/v8" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then TGENV_ARCH=arm64; else TGENV_ARCH=arm64; fi && \
+    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then TGENV_ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64/v8" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then TGENV_ARCH=arm64; else TGENV_ARCH=amd64; fi && \
     TGENV_ARCH=${TGENV_ARCH} tgenv install && \
     chown -R ubuntu:root /opt/tgenv
 
@@ -87,7 +86,7 @@ ARG TFLINT_VERSION="0.30.0"
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm/v8" ]; then ARCHITECTURE=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=arm64; else ARCHITECTURE=amd64; fi && \
     curl -Lo /tmp/tflint.zip https://github.com/terraform-linters/tflint/releases/download/v${TFLINT_VERSION}/tflint_linux_${ARCHITECTURE}.zip && \
     unzip /tmp/tflint.zip -d /usr/local/bin && \
-    python3 -m pip install --quiet yamllint
+    python3 -m pip install --no-cache-dir --quiet yamllint
 
 # tflint azurerm plugin
 ARG TFLINT_AZURERM_PLUGIN="0.12.0"
@@ -179,6 +178,12 @@ RUN curl -fsSL https://get.docker.com -o get-docker.sh && \
     sh get-docker.sh && \
     usermod -aG docker ubuntu
 
+# docker-compose https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
+ARG DOCKERCOMPOSE_VERSION="2.11.2"
+RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=x86_64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then ARCHITECTURE=aarch64; elif [ "$TARGETPLATFORM" = "linux/arm/v8" ]; then ARCHITECTURE=aarch64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then ARCHITECTURE=aarch64; else ARCHITECTURE=x86_64; fi && \
+    curl -Lo /usr/local/bin/docker-compose https://github.com/docker/compose/releases/download/v${DOCKERCOMPOSE_VERSION}/docker-compose-linux-${ARCHITECTURE} && \
+    chmod +x /usr/local/bin/docker-compose
+
 # cleanup
 RUN apt autoremove --purge -y && \
     find /opt /usr/lib -name __pycache__ -print0 | xargs --null rm -rf && \
@@ -190,12 +195,23 @@ RUN apt autoremove --purge -y && \
 USER ubuntu
 ENV PATH="$PATH:/home/ubuntu/.local/bin"
 
+# BUG: Broken pip due to bad openssl pip module
+# https://stackoverflow.com/questions/70544278/pip-install-failing-due-to-pyopenssl-openssl-error
+# https://serverfault.com/questions/1099606/ansible-openssl-error-with-apt-module
+# https://www.reddit.com/r/saltstack/comments/vc7oyb/getting_cryptographydeprecationwarning_python_36/
+# https://bitcoden.com/answers/broken-pip-due-to-bad-openssl-module
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org cryptography==38.0.0
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade pyopenssl==22.1.0
+
+# pre-commit https://pre-commit.com/#install
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org git+https://github.com/pre-commit/pre-commit.git@v2.20.0
+
 # azure cli
 # BUG: https://github.com/Azure/azure-cli/issues/7368 so installing via pip
-RUN python3 -m pip install --quiet --upgrade azure-cli
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade azure-cli
 
 # cookie-cutter https://github.com/cookiecutter/cookiecutter/blob/master/docs/installation.rst
-RUN python3 -m pip install --quiet --upgrade cookiecutter
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade cookiecutter
 
 # dbt https://github.com/dbt-labs/dbt-core/blob/main/docker/Dockerfile
 ARG dbt_core_ref=dbt-core@v1.2.0a1
@@ -204,12 +220,9 @@ ARG dbt_redshift_ref=dbt-redshift@v1.0.0
 ARG dbt_bigquery_ref=dbt-bigquery@v1.0.0
 ARG dbt_snowflake_ref=dbt-snowflake@v1.0.0
 ARG dbt_third_party
-RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
-RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
-# RUN python3 -m pip install --quiet --no-cache "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
-
-# pre-commit https://pre-commit.com/#install
-RUN python3 -m pip install --quiet --upgrade pre-commit
+RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
+RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
+# RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
+# RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
 
 WORKDIR /app
