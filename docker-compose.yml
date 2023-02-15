@@ -12,8 +12,9 @@ services:
     network_mode: "bridge"
     volumes:
       - ".:/app"
-      - "~/.ssh:/home/ubuntu/.ssh"
-      # - "$AZURE_CONFIG_DIR:/home/ubuntu/.azure"
+    #   - "~/.ssh:/home/ubuntu/.ssh"
+    # Add your .aws or .azure or .kube directories here
+    # - "$AZURE_CONFIG_DIR:/home/ubuntu/.azure"
     working_dir: "/app"
     environment:
       - ARCH
@@ -24,6 +25,7 @@ services:
       - ARM_PARTNER_ID
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
       - TF_LOG
       - TGENV_AUTO_INSTALL=true
       # TODO: Below is supposed to cache Terraform plugins, but I get lock contention errors

@@ -11,7 +11,7 @@ ARG MIRROR="http://archive.ubuntu.com"
 ARG UBUNTU_RELEASE="focal"
 ARG UBUNTU_VERSION="20.04"
 ARG TARGETPLATFORM
-ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree gpg"
+ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree gpg snapd shellcheck"
 
 # Env vars
 ENV PYTHONIOENCODING=utf-8
@@ -71,7 +71,7 @@ RUN git clone --depth 1 https://github.com/cunymatthieu/tgenv.git /opt/tgenv && 
     ln -s /opt/tgenv/bin/terragrunt /usr/local/bin && \
     mkdir -p /opt/tgenv/versions && \
     cd /opt/tgenv && \
-    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then TGENV_ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64/v8" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then TGENV_ARCH=arm64; else TGENV_ARCH=arm64; fi && \
+    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then TGENV_ARCH=amd64; elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64/v8" ]; then TGENV_ARCH=arm64; elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then TGENV_ARCH=arm64; else TGENV_ARCH=amd64; fi && \
     TGENV_ARCH=${TGENV_ARCH} tgenv install && \
     chown -R ubuntu:root /opt/tgenv
 
@@ -194,6 +194,17 @@ RUN apt autoremove --purge -y && \
 
 USER ubuntu
 ENV PATH="$PATH:/home/ubuntu/.local/bin"
+
+# BUG: Broken pip due to bad openssl pip module
+# https://stackoverflow.com/questions/70544278/pip-install-failing-due-to-pyopenssl-openssl-error
+# https://serverfault.com/questions/1099606/ansible-openssl-error-with-apt-module
+# https://www.reddit.com/r/saltstack/comments/vc7oyb/getting_cryptographydeprecationwarning_python_36/
+# https://bitcoden.com/answers/broken-pip-due-to-bad-openssl-module
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org cryptography==38.0.0
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade pyopenssl==22.1.0
+
+# pre-commit https://pre-commit.com/#install
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org git+https://github.com/pre-commit/pre-commit.git@v2.20.0
 
 # azure cli
 # BUG: https://github.com/Azure/azure-cli/issues/7368 so installing via pip

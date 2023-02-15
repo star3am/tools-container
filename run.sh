@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# docker build -t tools .
-# docker tag tools:latest star3am/repository:tools
-# docker login
-# docker push star3am/repository:tools
-
 arch=$(uname -m)
 if [[ $arch == x86_64* ]]; then
   ARCH="amd64"
@@ -13,6 +8,8 @@ elif  [[ $arch == arm64 ]]; then
 fi
 echo "CPU is ${ARCH}"
 pwd
+docker rmi -f terraform-module_tools
+ARCH=${ARCH} docker-compose run --rm tools bash -c '
 # docker images | grep tools
 # docker rmi -f tools-${ARCH}
 # docker buildx ls
@@ -41,26 +38,15 @@ ARCH=${ARCH} docker compose run --rm tools bash -c '
   python -V
   echo "*** pip -V"
   pip -V
-  echo "*** az --version"
-  az --version
-  echo "*** cookiecutter --version"
-  cookiecutter --version
-  echo "*** aws --version"
-  aws --version
-  echo "*** gcloud --version"
-  gcloud --version
-  echo "*** dbt --version"
-  dbt --version
-  echo "*** kubectl version"
-  kubectl version
-  echo "*** helm version"
-  helm version
   echo "*** terraform -version"
   terraform -version
   echo "*** terragrunt -version"
   terragrunt -version
   echo "*** pre-commit --version"
   pre-commit --version
+  terraform-docs markdown document --hide requirements --escape=false --sort-by required . > docs/README.md
+  terraform init -upgrade
+  terraform plan
   echo "*** packer version"
   packer version
   echo "*** docker version"

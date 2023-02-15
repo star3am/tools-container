@@ -58,17 +58,17 @@ repos:
   hooks:
     - id: hadolint
       args: [
-        '--ignore', 'DL3027', # Do not use apt
-        '--ignore', 'DL3007', # Using latest
-        '--ignore', 'DL4006', # Not related to alpine
-        '--ignore', 'SC1091', # Useless check
-        '--ignore', 'SC2015', # Useless check
-        '--ignore', 'SC3037', # Not related to alpine
-        '--ignore', 'DL3013', # Pin versions in pip
+        '--ignore', 'DL3027', # Ignore Do not use apt
+        '--ignore', 'DL3007', # Ignore Using latest
+        '--ignore', 'DL4006', # Ignore Not related to alpine
+        '--ignore', 'SC1091', # Ignore Useless check
+        '--ignore', 'SC2015', # Ignore Useless check
+        '--ignore', 'SC3037', # Ignore Not related to alpine
+        '--ignore', 'DL3013', # Ignore Pin versions in pip
+        '--ignore', 'DL3008', # Ignore Pin versions in apt get install
+        '--ignore', 'DL3009', # Ignore Delete the apt-get lists after installing something'
+        '--ignore', 'DL3015', # Ignore Avoid additional packages by specifying `--no-install-recommends`
         '--ignore', 'DL3003', # Ignore WORKSPACE to switch directory
-        '--ignore', 'DL3008', # Pin versions in apt get install
-        '--ignore', 'SC2155', # Declare and assign separately to avoid masking return values
-        '--ignore', 'DL3059', # Multiple consecutive `RUN` instructions. Consider consolidation
-        '--ignore', 'DL3009', # Delete the apt-get lists after installing something
-        '--ignore', 'DL3015', # Avoid additional packages by specifying `--no-install-recommends`
+        '--ignore', 'DL3059', # Ignore Multiple RUN Commands
+        '--ignore', 'SC2155', # Ignore Declare and assign separately to avoid masking return values.'
       ]
