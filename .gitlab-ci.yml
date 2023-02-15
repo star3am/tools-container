@@ -11,6 +11,17 @@ stages:
 pre-commit:
   stage: pre-commit
   script:
+    # https://www.docker.com/blog/how-to-rapidly-build-multi-architecture-images-with-buildx/
+    # - pwd
+    # - docker build -t tools:latest .
+    # - docker images | grep tools
+    # - docker buildx create --name tools --use
+    # - docker buildx inspect
+    # # https://vikaspogu.dev/posts/docker-buildx-setup/
+    # - docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+    # - docker buildx build --platform=linux/amd64,linux/arm64 -t tools:latest .
+    # - docker buildx imagetools inspect star3am/repository:tools
+    # - docker buildx build --push --platform linux/amd64,linux/arm64 --tag star3am/repository:tools .
     - |
       arch=$(uname -m)
       if [[ $arch == x86_64* ]]; then
@@ -83,3 +94,6 @@ pre-commit:
         pre-commit run -a
         # echo "*** pip list"
         # pip list'
+        pwd'
+  only:
+    - main

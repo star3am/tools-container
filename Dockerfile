@@ -225,4 +225,13 @@ RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-la
 # RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
 # RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
 
+# BUG: Broken pip due to bad openssl pip module
+# https://www.reddit.com/r/saltstack/comments/vc7oyb/getting_cryptographydeprecationwarning_python_36/
+# https://bitcoden.com/answers/broken-pip-due-to-bad-openssl-module
+# RUN python3 -m pip install --no-cache-dir --quiet --upgrade cachecontrol
+# RUN python3 -m pip install --no-cache-dir --quiet --upgrade pyopenssl
+
+# pre-commit https://pre-commit.com/#install
+# RUN python3 -m pip install --no-cache-dir --quiet --upgrade git+https://github.com/pre-commit/pre-commit.git@v2.18.1
+
 WORKDIR /app

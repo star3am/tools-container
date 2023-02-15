@@ -5,9 +5,35 @@
 This is an example repository showing how to use Git pre-commit to help you become a better developer.
 It does great little things for you such as check your YAML and JSON syntax. But it also helps you stay safe and secure by scanning your repository for AWS credentials and SSH private_key files.
 
+## Install
+
+### Local Development
+You will need the following tools to get started before you can use this repo and commence local development
+
+- Docker Desktop
+  https://www.docker.com/products/docker-desktop/
+- IDE Visual Studio Code (with Remote development in Containers extension)
+  https://code.visualstudio.com/docs/remote/containers-tutorial
+- Git
+  https://git-scm.com/
+- Pre-Commit
+  https://pre-commit.com/#install
+
+### Build Agent
+You will need the following tools installed on the build agent to use this
+
+- Git
+- Docker Daemon
+
 You can add your own pre-commit hooks, and there is support for all Operating Systems and most Languages.
 
 Most of all, have fun becoming a better developer <3
+=======
+## Command Line CLI Supported
+| Name | Azure | Google | AWS | Kubectl | Dbt | Terraform | Terragrunt | TFENV | Python | Pip | Packer | Cookiecutter | Pre-Commit |
+|------|-------|--------|-----|-------|-------|-----------|------------|-------|--------|-----|--------|--------------|------------|
+| Tools | ✓   | ✓ | | ✓   | ✓     | ✓     |         ✓            ✓ |    ✓ |     ✓ |  ✓ |     ✓      |
+✓ |         ✓ ✓ |
 
 ## Dependencies
 - Python

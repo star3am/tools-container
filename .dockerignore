@@ -14,3 +14,6 @@ logs/
 
 # ignore ISO images
 *.iso
+
+# ignore devcontainer directory
+.devcontainer
