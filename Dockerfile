@@ -11,7 +11,32 @@ ARG MIRROR="http://archive.ubuntu.com"
 ARG UBUNTU_RELEASE="focal"
 ARG UBUNTU_VERSION="20.04"
 ARG TARGETPLATFORM
-ARG PKGS="apt-transport-https ca-certificates gnupg jq software-properties-common curl git unzip zip python3.9 python3-pip python3-dev python3-virtualenv apt-utils build-essential tree gpg snapd shellcheck"
+ARG PKGS="\
+apt-transport-https \
+apt-utils \
+build-essential \
+ca-certificates \
+curl \
+git \
+gnupg \
+gpg \
+jq \
+libffi-dev \
+libssl-dev \
+lsb-release \
+make \
+openssh-client \
+python3-crcmod \
+python3-dev \
+python3-pip \
+python3-virtualenv \
+shellcheck \
+snapd \
+software-properties-common \
+tree \
+unzip \
+zip \
+"
 
 # Env vars
 ENV PYTHONIOENCODING=utf-8
@@ -22,10 +47,6 @@ RUN apt update && \
     apt install --no-install-recommends -y ${PKGS} && \
     apt upgrade -y && \
     apt autoremove --purge -y
-
-# python
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1 --force && \
-    update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1 --force
 
 # packages.microsoft.com repo key
 RUN curl -sSL https://packages.microsoft.com/keys/microsoft.asc | apt-key add -
@@ -113,7 +134,6 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=amd64; elif [ "$
 
 # helm https://helm.sh/docs/intro/install/#from-apt-debianubuntu
 RUN curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | tee /usr/share/keyrings/helm.gpg > /dev/null && \
-    apt-get install apt-transport-https --yes && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list && \
     apt-get update && \
     apt-get install -y helm
@@ -130,41 +150,32 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then ARCHITECTURE=x86_64; elif [ "
     unzip -qq awscliv2.zip && \
     ./aws/install --update
 
-# gcloud cli https://github.com/GoogleCloudPlatform/cloud-sdk-docker/blob/master/Dockerfile https://cloud.google.com/sdk/docs/install#deb
-ARG CLOUD_SDK_VERSION=386.0.0
-ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
-ENV PATH "$PATH:/opt/google-cloud-sdk/bin/"
-RUN apt-get -qqy update && apt-get install -qqy \
-        curl \
-        python3-dev \
-        python3-crcmod \
-        apt-transport-https \
-        lsb-release \
-        openssh-client \
-        git \
-        make \
-        gnupg && \
-    # TODO: Fixme: The repository 'https://packages.cloud.google.com/apt cloud-sdk-focal Release' does not have a Release file.
-    # INFO: https://packages.cloud.google.com/apt/dists Ubuntu Focal Realease does not exist, we use Ubuntu Bionic instead
-    export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
-    export CLOUD_SDK_REPO="cloud-sdk-bionic" && \
-    echo "deb https://packages.cloud.google.com/apt $CLOUD_SDK_REPO main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
-    apt-get update && \
-    apt-get install -y google-cloud-sdk=${CLOUD_SDK_VERSION}-0 \
-        google-cloud-sdk-app-engine-python=${CLOUD_SDK_VERSION}-0 \
-        google-cloud-sdk-app-engine-python-extras=${CLOUD_SDK_VERSION}-0
-        # google-cloud-sdk-app-engine-java=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-app-engine-go=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-datalab=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-datastore-emulator=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-pubsub-emulator=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-bigtable-emulator=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-firestore-emulator=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-spanner-emulator=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-cbt=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-kpt=${CLOUD_SDK_VERSION}-0 \
-        # google-cloud-sdk-local-extract=${CLOUD_SDK_VERSION}-0
+# TODO: Currently an issue getting gcloud cli installed on ubuntu. Unable to find the signed cert
+#       'curl https://packages.cloud.google.com/apt/doc/apt-key.gpg' returns 500 error
+# # gcloud cli https://github.com/GoogleCloudPlatform/cloud-sdk-docker/blob/master/Dockerfile https://cloud.google.com/sdk/docs/install#deb
+# ARG CLOUD_SDK_VERSION=386.0.0
+# ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
+# ENV PATH "$PATH:/opt/google-cloud-sdk/bin/"
+# # TODO: Fixme: The repository 'https://packages.cloud.google.com/apt cloud-sdk-focal Release' does not have a Release file.
+# # INFO: https://packages.cloud.google.com/apt/dists Ubuntu Focal Realease does not exist, we use Ubuntu Bionic instead
+# RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" > /etc/apt/sources.list.d/google-cloud-sdk.list && \
+#     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+#     apt-get update
+#     # apt-get update && \
+#     # apt-get install -y google-cloud-sdk=${CLOUD_SDK_VERSION}-0 \
+#     #     google-cloud-sdk-app-engine-python=${CLOUD_SDK_VERSION}-0 \
+#     #     google-cloud-sdk-app-engine-python-extras=${CLOUD_SDK_VERSION}-0
+#     #     # google-cloud-sdk-app-engine-java=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-app-engine-go=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-datalab=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-datastore-emulator=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-pubsub-emulator=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-bigtable-emulator=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-firestore-emulator=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-spanner-emulator=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-cbt=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-kpt=${CLOUD_SDK_VERSION}-0 \
+#     #     # google-cloud-sdk-local-extract=${CLOUD_SDK_VERSION}-0
 
 # packer
 ARG PACKER_VERSION="1.7.2"
@@ -201,7 +212,10 @@ ENV PATH="$PATH:/home/ubuntu/.local/bin"
 # https://www.reddit.com/r/saltstack/comments/vc7oyb/getting_cryptographydeprecationwarning_python_36/
 # https://bitcoden.com/answers/broken-pip-due-to-bad-openssl-module
 RUN python3 -m pip install --no-cache-dir --quiet --upgrade --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org cryptography==38.0.0
-RUN python3 -m pip install --no-cache-dir --quiet --upgrade pyopenssl==22.1.0
+# https://www.reddit.com/r/saltstack/comments/vc7oyb/getting_cryptographydeprecationwarning_python_36/
+# https://bitcoden.com/answers/broken-pip-due-to-bad-openssl-module
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade cachecontrol
+RUN python3 -m pip install --no-cache-dir --quiet --upgrade pyopenssl
 
 # pre-commit https://pre-commit.com/#install
 RUN python3 -m pip install --no-cache-dir --quiet --upgrade --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org git+https://github.com/pre-commit/pre-commit.git@v2.20.0
@@ -213,25 +227,17 @@ RUN python3 -m pip install --no-cache-dir --quiet --upgrade azure-cli
 # cookie-cutter https://github.com/cookiecutter/cookiecutter/blob/master/docs/installation.rst
 RUN python3 -m pip install --no-cache-dir --quiet --upgrade cookiecutter
 
-# dbt https://github.com/dbt-labs/dbt-core/blob/main/docker/Dockerfile
-ARG dbt_core_ref=dbt-core@v1.2.0a1
-ARG dbt_postgres_ref=dbt-core@v1.2.0a1
-ARG dbt_redshift_ref=dbt-redshift@v1.0.0
-ARG dbt_bigquery_ref=dbt-bigquery@v1.0.0
-ARG dbt_snowflake_ref=dbt-snowflake@v1.0.0
-ARG dbt_third_party
-RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
-RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
-# RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
-# RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
-
-# BUG: Broken pip due to bad openssl pip module
-# https://www.reddit.com/r/saltstack/comments/vc7oyb/getting_cryptographydeprecationwarning_python_36/
-# https://bitcoden.com/answers/broken-pip-due-to-bad-openssl-module
-# RUN python3 -m pip install --no-cache-dir --quiet --upgrade cachecontrol
-# RUN python3 -m pip install --no-cache-dir --quiet --upgrade pyopenssl
-
-# pre-commit https://pre-commit.com/#install
-# RUN python3 -m pip install --no-cache-dir --quiet --upgrade git+https://github.com/pre-commit/pre-commit.git@v2.18.1
+# TODO: Fix me. This breaks the PIP with OpenSSL error and at this stage unable to fix it.
+# # dbt https://github.com/dbt-labs/dbt-core/blob/main/docker/Dockerfile
+# ARG dbt_core_ref=dbt-core@v1.2.0a1
+# ARG dbt_postgres_ref=dbt-core@v1.2.0a1
+# ARG dbt_redshift_ref=dbt-redshift@v1.0.0
+# ARG dbt_bigquery_ref=dbt-bigquery@v1.0.0
+# ARG dbt_snowflake_ref=dbt-snowflake@v1.0.0
+# ARG dbt_third_party
+# RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_bigquery_ref}#egg=dbt-bigquery"
+# RUN python3 -m pip install --no-cache-dir --quiet "git+https://github.com/dbt-labs/${dbt_snowflake_ref}#egg=dbt-snowflake"
+# # RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_postgres_ref}#egg=dbt-postgres&subdirectory=plugins/postgres"
+# # RUN python3 -m pip install --no-cache --quiet "git+https://github.com/dbt-labs/${dbt_redshift_ref}#egg=dbt-redshift"
 
 WORKDIR /app

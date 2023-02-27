@@ -34,8 +34,8 @@ ARCH=${ARCH} docker compose run --rm tools bash -c '
   pwd
   tree -a -L 1
   cat Dockerfile
-  echo "*** python -V"
-  python -V
+  echo "*** python3 -V"
+  python3 -V
   echo "*** pip -V"
   pip -V
   echo "*** terraform -version"
@@ -58,4 +58,3 @@ ARCH=${ARCH} docker compose run --rm tools bash -c '
   pre-commit init-templatedir -t pre-commit ${DIR}
   pre-commit validate-config
   pre-commit run -a
-'
